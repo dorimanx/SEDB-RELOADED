@@ -22,7 +22,7 @@ namespace SEDiscordBridge
         private string lastMessage = "";
         private ulong botId = 0;
         private int retry = 0;
-
+        public DiscordConfiguration DiscordConfiguration { get; set; }
         public bool Ready { get; set; } = false;
         public static DiscordClient Discord { get; set; }
 
@@ -73,23 +73,11 @@ namespace SEDiscordBridge
         {
             try
             {
-                // Windows Vista - 8.1
-                if (Environment.OSVersion.Platform.Equals(PlatformID.Win32NT) && Environment.OSVersion.Version.Major == 6)
-                {
-                    Discord = new DiscordClient(new DiscordConfiguration
-                    {
-                        Token = Plugin.Config.BotToken,
-                        TokenType = TokenType.Bot,
-                    });
-                }
-                else
-                {
-                    Discord = new DiscordClient(new DiscordConfiguration
-                    {
-                        Token = Plugin.Config.BotToken,
-                        TokenType = TokenType.Bot
-                    });
-                }
+                DiscordConfiguration = new DiscordConfiguration {
+                    Token = Plugin.Config.BotToken,
+                    TokenType = TokenType.Bot,
+                };
+                Discord = new DiscordClient(DiscordConfiguration);
             }
             catch (Exception) { }
 
@@ -113,6 +101,27 @@ namespace SEDiscordBridge
                 Task.Run(() => Discord.UpdateStatusAsync(game, userStatus));
             }
         }
+
+        /*
+        public static async void SendDiscordMessageStatic(string message) {
+
+            string channelToPostIn = Plugin.Config.ChatChannelId;
+            if (channelToPostIn == string.Empty) {
+                channelToPostIn = Plugin.Config.StatusChannelId;
+            }
+
+            if(channelToPostIn == string.Empty) {
+                SEDiscordBridgePlugin.Log.Error("StatusChannelID or ChatChannelID MUST have a value. Cannot use SendDiscordMessageStatic.");
+                return;
+            }
+
+            await Discord.SendMessageAsync(Discord.GetChannelAsync(ulong.Parse(channelToPostIn)).Result, message);
+        }
+
+        public static async void SendDiscordMessageStatic(string message, string channelID) {
+            await Discord.SendMessageAsync(Discord.GetChannelAsync(ulong.Parse(channelID)).Result, message);
+        }
+        */
 
         public void SendSimMessage(string msg)
         {
