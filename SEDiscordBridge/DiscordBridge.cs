@@ -157,11 +157,12 @@ namespace SEDiscordBridge
 
             if (Ready && Plugin.Config.ChatChannelId.Length > 0)
             {
-                foreach (var chanID in Plugin.Config.ChatChannelId.Split(' ')) {
-
+                var OriginalMsg = msg;
+                foreach (var chanID in Plugin.Config.ChatChannelId.Split(' '))
+                {
                     DiscordChannel chann = Discord.GetChannelAsync(ulong.Parse(chanID)).Result;
                     //mention
-                    msg = MentionNameToID(msg, chann);
+                    msg = MentionNameToID(OriginalMsg, chann);
 
                     if (user != null)
 					{
