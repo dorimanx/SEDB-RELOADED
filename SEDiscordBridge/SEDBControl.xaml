@@ -127,7 +127,7 @@
                         <Label Content="Running Message" HorizontalAlignment="Left" Margin="239,94,0,0" VerticalAlignment="Top"/>
                         <TextBox HorizontalAlignment="Left" Height="23" Margin="239,120,0,0" TextWrapping="Wrap" Text="{Binding Status}" ToolTip="Text to show on BOT status. Valid placeholders: {ss} server sim ratio, {p} - for online players, {mc} - mods installed, {mp} - max players, {uptime@HH:mm:ss} - Uptime" VerticalAlignment="Top" Width="240"/>
                     </Grid>
-                    <Label Content="Mentions" HorizontalAlignment="Left" Margin="10,195,0,0" VerticalAlignment="Top"/>
+                    <Label Content="Mentions, in-game mention requires server members intent enabled on your bot" HorizontalAlignment="Left" Margin="10,195,0,0" VerticalAlignment="Top"/>
                     <CheckBox Content="Allow in-game ping discord users" HorizontalAlignment="Left" Margin="10,226,0,0" VerticalAlignment="Top" IsChecked="{Binding MentOthers}"/>
                     <CheckBox Content="Allow in-game ping everyone" HorizontalAlignment="Left" Margin="10,246,0,0" VerticalAlignment="Top" IsChecked="{Binding MentEveryone}"/>
                 </Grid>
