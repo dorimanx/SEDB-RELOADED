@@ -71,6 +71,9 @@ namespace SEDiscordBridge
 
         private Task RegisterDiscord()
         {
+            if (Plugin.Config.BotToken == null && Plugin.Config.BotToken == string.Empty)
+                return Task.CompletedTask;
+
             try
             {
                 DiscordConfiguration = new DiscordConfiguration {
