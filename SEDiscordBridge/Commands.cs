@@ -6,6 +6,7 @@ using VRage.Game.ModAPI;
 using System.Collections.Generic;
 using Sandbox.Game;
 using Sandbox.Game.World;
+using System.Threading;
 
 namespace SEDiscordBridge
 {
@@ -16,9 +17,25 @@ namespace SEDiscordBridge
 
         public SEDiscordBridgePlugin Plugin => (SEDiscordBridgePlugin)Context.Plugin;
 
-        [Command("reload", "Reload current SEDB configuration")]
+        [Command("reload", "Reload SEDB Service")]
         [Permission(MyPromoteLevel.Admin)]
-        public void ReloadBridge() {
+        public void ReloadBridge()
+        {
+            if (Plugin.Config.Enabled)
+            {
+                Plugin.UnloadSEDB();
+                Thread.Sleep(100);
+                Plugin.LoadSEDB();
+                Context.Respond("SEDB plugin reloaded!");
+            }
+            else
+                Context.Respond("SEDB plugin Disabled!");
+        }
+
+
+        [Command("reloadconfig", "Reload current SEDB configuration")]
+        [Permission(MyPromoteLevel.Admin)]
+        public void ReloadBridgeConfig() {
             Plugin.InitConfig();
 
             if (Plugin.Config.Enabled) {
