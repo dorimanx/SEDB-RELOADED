@@ -144,6 +144,7 @@ namespace SEDiscordBridge
                 SEDiscordBridgePlugin.Log.Error(e);
             }
         }
+
         public void RunSendChatTask(string user, string msg)
         {
             Task.Run(() => SendChatMessage(user, msg));
@@ -263,10 +264,11 @@ namespace SEDiscordBridge
         }
 
         public string GetName(ulong userID) {
+            string discordname;
             var guilds = Discord.Guilds;
             foreach (var guildID in guilds) {
                 var Guild = Discord.GetGuildAsync(guildID.Key).Result;
-                return _ = Guild.GetMemberAsync(userID).Result.DisplayName;
+                return discordname = Guild.GetMemberAsync(userID).Result.DisplayName;
             }
 
             return null;
@@ -369,7 +371,7 @@ namespace SEDiscordBridge
                         if (Plugin.Config.UseNicks)
                             sender = e.Guild.GetMemberAsync(e.Author.Id).Result.Nickname;
                         else
-                            sender = e.Author.Username;
+                            sender = e.Guild.GetMemberAsync(e.Author.Id).Result.Username;
                     }
 
                     var manager = Plugin.Torch.CurrentSession.Managers.GetManager<IChatManagerServer>();

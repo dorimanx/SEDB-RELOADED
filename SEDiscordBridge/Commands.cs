@@ -55,7 +55,7 @@ namespace SEDiscordBridge
 
         [Command("link", "Link you steamID to a discord account")]
         [Permission(MyPromoteLevel.None)]
-        public async void link() {
+        public async void Link() {
             IMyPlayer player = Context.Player;
             if (player == null) {
                 Context.Respond("Command cannot be ran from console");
@@ -71,9 +71,10 @@ namespace SEDiscordBridge
                 FormUrlEncodedContent content = new FormUrlEncodedContent(pairs);
                 response = await clients.PostAsync("http://sedb.uk/discord/guid-manager.php", content);
             }
+
             string texts = await response.Content.ReadAsStringAsync();
-            Utils utils = new Utils();
             Dictionary<string, string> kvp = Utils.ParseQueryString(texts);
+
             if (kvp["existance"] == "false") {
                 MyVisualScriptLogicProvider.OpenSteamOverlay($"https://steamcommunity.com/linkfilter/?url=http://sedb.uk/?guid={kvp["guid"]}&steamid={Context.Player.SteamUserId}", Context.Player.IdentityId);
                 Context.Respond("A browser window has been opened... Please continue there.");

@@ -55,7 +55,7 @@ namespace SEDiscordBridge
         public static SEDiscordBridgePlugin Static { get; private set; }
 
         /// <inheritdoc />
-        public UserControl GetControl() => _control ?? (_control = new SEDBControl(this));
+        public UserControl GetControl() => _control ??= new SEDBControl(this);
 
         public void Save() => _config?.Save();
 
@@ -217,7 +217,7 @@ namespace SEDiscordBridge
                 if (InjectDiscordIDMethod != null) {
                     string discord_Id = Task.Run(async () => await GetID(player.SteamId)).Result;
                     if (discord_Id != null) {
-                        var roledata = GetRoles(ulong.Parse(discord_Id), player.SteamId);
+                        var roledata = GetRoles(ulong.Parse(discord_Id));
                         string discordName = DDBridge.GetName(ulong.Parse(discord_Id));
                         Log.Info($"DiscordID for {player.Name} found! Retrieving role data and injecting into essentials...");
                         InjectDiscordIDMethod.Invoke(null, new object[] { player.SteamId, discord_Id, discordName, roledata });
@@ -236,8 +236,8 @@ namespace SEDiscordBridge
             }
         }
 
-        public Dictionary<ulong, string> GetRoles(ulong userID, ulong steamID) {
-            List<DiscordRole> discordRoles = new List<DiscordRole>();
+        public Dictionary<ulong, string> GetRoles(ulong userID) {
+            List<DiscordRole> discordRoles;
             Dictionary<ulong, string> roleData = new Dictionary<ulong, string>();
             var guilds = DiscordBridge.Discord.Guilds;
             foreach (var guildID in guilds) {
@@ -338,6 +338,8 @@ namespace SEDiscordBridge
             {
                 InitPost();
             }
+
+            Log.Info("Discord Bridge loaded!");
         }
 
         private void InitPost()
@@ -442,7 +444,7 @@ namespace SEDiscordBridge
             }
         }
 
-        private void Multibase_PlayerLeft(IPlayer obj)
+        private async void Multibase_PlayerLeft(IPlayer obj)
         {
             if (!Config.Enabled) return;
 
@@ -450,11 +452,11 @@ namespace SEDiscordBridge
             _conecting.Remove(obj.SteamId);
             if (Config.Leave.Length > 0 && (!(obj.Name.StartsWith("[") && obj.Name.EndsWith("]") && obj.Name.Contains("..."))))
             {
-                Task.Run(() => DDBridge.SendStatusMessage(obj.Name, Config.Leave, obj));
+                await Task.Run(() => DDBridge.SendStatusMessage(obj.Name, Config.Leave, obj));
             }
         }
 
-        private void Multibase_PlayerJoined(IPlayer obj)
+        private async void Multibase_PlayerJoined(IPlayer obj)
         {
             if (!Config.Enabled) return;
 
@@ -465,7 +467,7 @@ namespace SEDiscordBridge
             _conecting.Add(obj.SteamId);
             if (Config.Connect.Length > 0)
             {
-                Task.Run(() => DDBridge.SendStatusMessage(obj.Name, Config.Connect, obj));
+                await Task.Run(() => DDBridge.SendStatusMessage(obj.Name, Config.Connect, obj));
             }
         }
 
