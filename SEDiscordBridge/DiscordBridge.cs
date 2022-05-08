@@ -71,7 +71,7 @@ namespace SEDiscordBridge
 
         private Task RegisterDiscord()
         {
-            if (Plugin.Config.BotToken == null && Plugin.Config.BotToken == string.Empty)
+            if (Plugin.Config.BotToken == null || Plugin.Config.BotToken == string.Empty)
                 return Task.CompletedTask;
 
             try
@@ -84,15 +84,17 @@ namespace SEDiscordBridge
             }
             catch (Exception) { }
 
-            Discord.ConnectAsync();
+            if (!Plugin.Config.UseStatus)
+                Discord.ConnectAsync();
 
             Discord.MessageCreated += Discord_MessageCreated;
 
-            Discord.Ready += async (c,e) =>
+            Discord.Ready += async (c, e) =>
             {
                 Ready = true;
                 await Task.CompletedTask;
             };
+
             return Task.CompletedTask;
         }
 
@@ -101,8 +103,13 @@ namespace SEDiscordBridge
             if (Ready && status?.Length > 0)
             {
                 game.Name = status;
-                Task.Run(() => Discord.UpdateStatusAsync(game, userStatus));
+                Task.Run(() => UpdateStatusAsync(userStatus));
             }
+        }
+
+        private async Task UpdateStatusAsync(UserStatus userStatus)
+        {
+            await Discord.UpdateStatusAsync(game, userStatus, DateTime.Now);
         }
 
         /*

@@ -372,10 +372,19 @@ namespace SEDiscordBridge
         // for counter within _timer_elapsed() 
         private int i = 0;
         private DateTime timerStart = new DateTime(0);
+        private int TickRetry = 0; 
 
         private void Timer_Elapsed(object sender, ElapsedEventArgs e)
         {
             if (!Config.Enabled || DDBridge == null) return;
+
+            if (!DDBridge.Ready || DiscordBridge.Discord.CurrentUser == null || DiscordBridge.Discord.CurrentUser.Id == 0L)
+            {
+                if (TickRetry == 3 && DiscordBridge.Discord.CurrentUser == null)
+                    DiscordBridge.Discord.ConnectAsync();
+
+                TickRetry++;
+            }
 
             if (Torch.CurrentSession == null || torchServer.SimulationRatio <= 0f)
             {
@@ -400,8 +409,6 @@ namespace SEDiscordBridge
                 var maxPlayers = MySession.Static.MaxPlayers;
                 var simSpeed = torchServer.SimulationRatio.ToString("0.00");
 
-
-
                 DDBridge.SendStatus(status
                 .Replace("{p}", playersCount.ToString())
                 .Replace("{mp}", maxPlayers.ToString())
@@ -410,7 +417,7 @@ namespace SEDiscordBridge
 
                 if (Config.SimPing)
                 {
-                    if (torchServer.SimulationRatio < float.Parse(Config.SimThresh))
+                    if (torchServer.SimulationRatio < Config.SimThresh)
                     {
                         //condition
                         if (i == DiscordBridge.MinIncrement && DiscordBridge.Locked != 1 && playersCount > 0)

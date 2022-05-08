@@ -84,8 +84,8 @@ namespace SEDiscordBridge
         private string _simChannel = "";
         public string SimChannel { get => _simChannel; set => SetValue(ref _simChannel, value); }
 
-        private string _simThresh = "0.60";
-        public string SimThresh { get => _simThresh; set => SetValue(ref _simThresh, value); }
+        private float _simThresh = 0.60f;
+        public float SimThresh { get => _simThresh; set => SetValue(ref _simThresh, value); }
 
         private string _simMessage = "@here Simulation speed has dropped below threshold!";
         public string SimMessage { get => _simMessage; set => SetValue(ref _simMessage, value); }

@@ -25,6 +25,7 @@ namespace SEDiscordBridge
         {
             SEDiscordBridgePlugin.Static.IsRestart = true;
         }
+
         public static void OnRestartCancel()
         {
             SEDiscordBridgePlugin.Static.IsRestart = false;
@@ -36,6 +37,5 @@ namespace SEDiscordBridge
             SEDiscordBridgePlugin.Static.SessionChanged(null, TorchSessionState.Unloading);
             SEDiscordBridgePlugin.Static.DDBridge.StopDiscord();
         }
-
     }
 }
