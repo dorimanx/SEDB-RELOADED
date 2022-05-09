@@ -380,24 +380,33 @@ namespace SEDiscordBridge
 
             if (!DDBridge.Ready)
             {
-                if (TickRetry == 3 && DiscordBridge.Discord.CurrentUser == null)
+                if (TickRetry >= 3 && DiscordBridge.Discord.CurrentUser == null)
                 {
                     DiscordBridge.Discord.ConnectAsync();
                     TickRetry = 0;
                 }
+                else
+                {
+                    if (TickRetry > 10)
+                    {
+                        DiscordBridge.Discord.DisconnectAsync();
+                        DiscordBridge.Discord.Dispose();
+                        DDBridge = new DiscordBridge(this);
+                        TickRetry = 0;
+                    }
+                }
 
                 TickRetry++;
             }
-            else if (DiscordBridge.Discord.CurrentUser == null || DiscordBridge.Discord.CurrentUser.Id == 0L)
+            else if (DiscordBridge.Discord.CurrentUser == null || DiscordBridge.Discord.CurrentUser.Id == 0L
+                                                               || DiscordBridge.Discord.Presences == null
+                                                               || DiscordBridge.Discord.Presences.Count == 0)
             {
                 DDBridge.Ready = false;
                 DiscordBridge.Discord.DisconnectAsync();
-
-                DiscordBridge.Discord.Ready += async (c, e) =>
-                {
-                    DDBridge.Ready = true;
-                    await Task.CompletedTask;
-                };
+                DiscordBridge.Discord.Dispose();
+                DDBridge = new DiscordBridge(this);
+                TickRetry = 0;
             }
 
             if (Torch.CurrentSession == null || torchServer.SimulationRatio <= 0f)
