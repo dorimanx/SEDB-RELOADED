@@ -43,19 +43,15 @@ namespace SEDiscordBridge
             Increment = plugin.Config.SimCooldown / Increment;
             MinIncrement = 60 / (plugin.Config.StatusInterval / 1000);
             Locked = 0;
-            Task.Run(() => RegisterDiscord());
+            RegisterDiscord().ConfigureAwait(false).GetAwaiter().GetResult();
         }
 
         private async void RunGameTask(Action obj)
         {
             if (Plugin.Torch.CurrentSession != null)
-            {
                 await Plugin.Torch.InvokeAsync(obj);
-            }
             else
-            {
                 await Task.Run(obj);
-            }
         }
 
         public void StopDiscord()
@@ -79,13 +75,14 @@ namespace SEDiscordBridge
                 DiscordConfiguration = new DiscordConfiguration {
                     Token = Plugin.Config.BotToken,
                     TokenType = TokenType.Bot,
+                    AutoReconnect = true,
                 };
+
                 Discord = new DiscordClient(DiscordConfiguration);
             }
             catch (Exception) { }
 
-            if (!Plugin.Config.UseStatus)
-                Discord.ConnectAsync();
+            Discord.ConnectAsync();
 
             Discord.MessageCreated += Discord_MessageCreated;
 
@@ -103,13 +100,8 @@ namespace SEDiscordBridge
             if (Ready && status?.Length > 0)
             {
                 game.Name = status;
-                Task.Run(() => UpdateStatusAsync(userStatus));
+                Discord.UpdateStatusAsync(game, userStatus);
             }
-        }
-
-        private async Task UpdateStatusAsync(UserStatus userStatus)
-        {
-            await Discord.UpdateStatusAsync(game, userStatus, DateTime.Now);
         }
 
         /*
@@ -152,16 +144,6 @@ namespace SEDiscordBridge
             }
         }
 
-        public void RunSendChatTask(string user, string msg)
-        {
-            Task.Run(() => SendChatMessage(user, msg));
-        }
-
-        public void RunSendFacTask(string user, string msg, string facName)
-        {
-            Task.Run(() => SendFacChatMessage(user, msg, facName));
-        }
-
         public async Task SendChatMessage(string user, string msg)
         {
             if (lastMessage.Equals(user + msg)) return;
@@ -176,12 +158,11 @@ namespace SEDiscordBridge
                     msg = MentionNameToID(OriginalMsg, chann);
 
                     if (user != null)
-					{
                         msg = Plugin.Config.Format.Replace("{msg}", msg).Replace("{p}", user).Replace("{ts}", TimeZone.CurrentTimeZone.ToLocalTime(DateTime.Now).ToString());
-                    }
+
                     try
 					{
-                    	await Discord.SendMessageAsync(chann, msg.Replace("/n", "\n"));
+                        botId = Discord.SendMessageAsync(chann, msg.Replace("/n", "\n")).Result.Author.Id;
                     }
                     catch (DSharpPlus.Exceptions.RateLimitException)
 					{
@@ -213,25 +194,24 @@ namespace SEDiscordBridge
             }       
         }
 
-        public async Task SendFacChatMessage(string user, string msg, string facName)
+        public void SendFacChatMessage(string user, string msg, string facName)
         {
             try
             {
                 var channelIds = Plugin.Config.FactionChannels.Where(c => c.Faction.Equals(facName));
+
                 if (Ready && channelIds.Count() > 0)
                 {
                     foreach (var chId in channelIds)
                     {
-                        DiscordChannel chann = await Discord.GetChannelAsync(chId.Channel);
+                        DiscordChannel chann = Discord.GetChannelAsync(chId.Channel).Result;
                         //mention
                         msg = MentionNameToID(msg, chann);
 
                         if (user != null)
-                        {
                             msg = Plugin.Config.FacFormat.Replace("{msg}", msg).Replace("{p}", user).Replace("{ts}", TimeZone.CurrentTimeZone.ToLocalTime(DateTime.Now).ToString());
-                        }
-                        var res = await Discord.SendMessageAsync(chann, msg.Replace("/n", "\n"));
-                        botId = res.Author.Id;
+
+                        botId = Discord.SendMessageAsync(chann, msg.Replace("/n", "\n")).Result.Author.Id;
                     }
                 }
             }
@@ -241,13 +221,13 @@ namespace SEDiscordBridge
             }
         }
 
-        public async void SendStatusMessage(string user, string msg, Torch.API.IPlayer obj = null)
+        public void SendStatusMessage(string user, string msg, Torch.API.IPlayer obj = null)
         {
             if (Ready && Plugin.Config.StatusChannelId.Length > 0)
             {
                 try
                 {
-                    DiscordChannel chann = await Discord.GetChannelAsync(ulong.Parse(Plugin.Config.StatusChannelId));
+                    DiscordChannel chann = Discord.GetChannelAsync(ulong.Parse(Plugin.Config.StatusChannelId)).Result;
 
                     if (user != null)
                     {
@@ -255,13 +235,12 @@ namespace SEDiscordBridge
                             return;
 
                         if (obj != null && Plugin.Config.DisplaySteamId)
-                        {
                             user = $"{user} ({obj.SteamId})";
-                        }
 
                         msg = msg.Replace("{p}", user).Replace("{ts}", TimeZone.CurrentTimeZone.ToLocalTime(DateTime.Now).ToString());
                     }
-                    botId = (await Discord.SendMessageAsync(chann, msg.Replace("/n", "\n"))).Author.Id;
+
+                    botId = Discord.SendMessageAsync(chann, msg.Replace("/n", "\n")).Result.Author.Id;
                 }
                 catch (Exception e)
                 {
@@ -273,6 +252,7 @@ namespace SEDiscordBridge
         public string GetName(ulong userID) {
             string discordname;
             var guilds = Discord.Guilds;
+
             foreach (var guildID in guilds) {
                 var Guild = Discord.GetGuildAsync(guildID.Key).Result;
                 return discordname = Guild.GetMemberAsync(userID).Result.DisplayName;
@@ -281,7 +261,7 @@ namespace SEDiscordBridge
             return null;
         }
 
-        private async Task Discord_MessageCreated(DiscordClient discord, DSharpPlus.EventArgs.MessageCreateEventArgs e)
+        private Task Discord_MessageCreated(DiscordClient discord, DSharpPlus.EventArgs.MessageCreateEventArgs e)
         {
             bool cmdConditionMatch = false;
             dynamic cmdPrefixes = Plugin.Config.CommandPrefix;
@@ -293,7 +273,6 @@ namespace SEDiscordBridge
                 string comChannelId = Plugin.Config.CommandChannelId;
                 if (!string.IsNullOrEmpty(comChannelId))
                 {
-
                     foreach (string prefix in cmdPrefixes)
                     {
                         if (Plugin.Config.CommandChannelId.Contains(e.Channel.Id.ToString()) && e.Message.Content.StartsWith(prefix))
@@ -302,6 +281,7 @@ namespace SEDiscordBridge
                             matchedPrefix = prefix;
                         }
                     }
+
                     //execute commands
                     if (cmdConditionMatch)
                     {
@@ -312,7 +292,7 @@ namespace SEDiscordBridge
                         if (Plugin.Config.CommandPerms.Count() > 0)
                         {
                             var userId = e.Author.Id.ToString();
-                            bool hasRolePerm = (await e.Guild.GetMemberAsync(e.Author.Id)).Roles.Where(r => Plugin.Config.CommandPerms.Where(c => c.Player.Equals(r.Id.ToString())).Any()).Any();
+                            bool hasRolePerm = e.Guild.GetMemberAsync(e.Author.Id).Result.Roles.Where(r => Plugin.Config.CommandPerms.Where(c => c.Player.Equals(r.Id.ToString())).Any()).Any();
 
                             if (Plugin.Config.CommandPerms.Where(c =>
                             {
@@ -326,7 +306,7 @@ namespace SEDiscordBridge
                             }).Any())
                             {
                                 SendCmdResponse($"No permission for command: {cmd}", e.Channel, DiscordColor.Red, cmd);
-                                return;
+                                return Task.CompletedTask;
                             }
                         }
 
@@ -336,9 +316,7 @@ namespace SEDiscordBridge
                             var command = manager.Commands.GetCommand(cmdArgs, out string argText);
 
                             if (command == null)
-                            {
                                 SendCmdResponse($"Command not found: {cmdArgs}", e.Channel, DiscordColor.Red, cmd);
-                            }
                             else
                             {
                                 var cmdPath = string.Join(".", command.Path);
@@ -354,17 +332,15 @@ namespace SEDiscordBridge
                                 Plugin.Torch.InvokeBlocking(() => invokeSuccess = command.TryInvoke(context));
                                 SEDiscordBridgePlugin.Log.Debug($"invokeSuccess {invokeSuccess}");
                                 if (!invokeSuccess)
-                                {
                                     SendCmdResponse($"Error executing command: {cmdArgs}", e.Channel, DiscordColor.Red, cmd);
-                                }
+
                                 SEDiscordBridgePlugin.Log.Info($"Server ran command '{cmdArgs}'");
                             }
                         }
                         else
-                        {
                             SendCmdResponse("Error: Server is not running.", e.Channel, DiscordColor.Red, cmd);
-                        }
-                        return;
+
+                        return Task.CompletedTask;
                     }
                 }
 
@@ -408,7 +384,7 @@ namespace SEDiscordBridge
                                 if (!Plugin.Config.AsServer)
                                 {
                                     if (Plugin.Config.UseNicks)
-                                        sender = (await e.Guild.GetMemberAsync(e.Author.Id)).Nickname;
+                                        sender = e.Guild.GetMemberAsync(e.Author.Id).Result.Nickname;
                                     else
                                         sender = e.Author.Username;
                                 }
@@ -422,7 +398,7 @@ namespace SEDiscordBridge
                     }
                 }
             }
-            return;
+            return Task.CompletedTask;
         }
 
         private void SendCmdResponse(string response, DiscordChannel chann, DiscordColor color, string command)
@@ -462,13 +438,12 @@ namespace SEDiscordBridge
                         if (part.StartsWith("@"))
                         {
                             string name = Regex.Replace(part.Substring(1), @"[,#]", "");
-
                             var roleDictionary = chann.Guild.Roles;
                             dynamic roleToMention = null;
+
                             foreach (var role in roleDictionary) {
-                                if (role.Value.Name == name) {
+                                if (role.Value.Name == name)
                                     roleToMention = role.Value;
-                                }
                             }
 
                             if (roleToMention != null) {
@@ -481,25 +456,27 @@ namespace SEDiscordBridge
                                 msg = msg.Replace(part, part.Substring(1));
                                 continue;
                             }
+
                             if (string.Compare(name, "here", true) == 0 && !Plugin.Config.MentEveryone)
                             {
                                 msg = msg.Replace(part, part.Substring(1));
                                 continue;
                             }
+
                             try
                             {
                                 var members = chann.Guild.GetAllMembersAsync().Result;
 
                                 if (!Plugin.Config.MentOthers)
-                                {
                                     continue;
-                                }
+
                                 var memberByNickname = members.FirstOrDefault((u) => string.Compare(u.Nickname, name, true) == 0);
                                 if (memberByNickname != null)
                                 {
                                     msg = msg.Replace(part, $"<@{memberByNickname.Id}>");
                                     continue;
                                 }
+
                                 var memberByUsername = members.FirstOrDefault((u) => string.Compare(u.Username, name, true) == 0);
                                 if (memberByUsername != null)
                                 {
@@ -516,9 +493,7 @@ namespace SEDiscordBridge
 
                         var emojis = chann.Guild.Emojis;
                         if (part.StartsWith(":") && part.EndsWith(":") && emojis.Any(e => string.Compare(e.Value.GetDiscordName(), part, true) == 0))
-                        {
                             msg = msg.Replace(part, $"<{part}{emojis.Where(e => string.Compare(e.Value.GetDiscordName(), part, true) == 0).First().Key}>");
-                        }
                     }
                 }
             }
@@ -567,22 +542,17 @@ namespace SEDiscordBridge
                     .Replace("*", "\\*")
                     .Replace("~", "\\~");
                 if (Plugin.Config.StripGPS)
-                {
                     message = Regex.Replace(message, @"@\ ?[0-9E+.-]+,[0-9E+.-]+,[0-9E+.-]+", "", RegexOptions.Multiline);
-                }
 
                 const int chunkSize = 2000 - 1; // Remove 1 just ensure everything is ok
 
                 if (message.Length <= chunkSize)
-                {
                     SendCmdResponse(message, channel, DiscordColor.Green, null);
-                }
                 else
                 {
                     var index = 0;
                     do
                     {
-
                         SEDiscordBridgePlugin.Log.Debug($"while iteration index {index}");
 
                         /* if remaining part of message is small enough then just output it. */

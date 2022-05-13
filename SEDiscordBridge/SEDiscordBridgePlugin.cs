@@ -83,46 +83,49 @@ namespace SEDiscordBridge
             {
                 Log.Warn(e);
             }
+
             if (_config?.Data == null)
                 _config = new Persistent<SEDBConfig>(Path.Combine(StoragePath, "SEDiscordBridge.cfg"), new SEDBConfig());
         }
 
         private void MessageRecieved(TorchChatMessage msg, ref bool consumed)
         {
+            _ = Task.Run(() => { SendAsync(msg); return Task.CompletedTask; });
+        }
+
+        private async void SendAsync(TorchChatMessage msg)
+        {
             try
             {
                 if (!Config.Enabled) return;
 
-
                 if (msg.AuthorSteamId != null && !ChatManager.MutedUsers.Contains((ulong)msg.AuthorSteamId))
                 {
-
-                    if (DEBUG) {
+                    if (DEBUG)
                         Log.Info($"Recieved messages with valid SID {msg.Author} | {msg.Message} | {msg.Target} | {msg.AuthorSteamId}");
-                    }
 
                     switch (msg.Channel)
                     {
                         case ChatChannel.Global:
-                            DDBridge.RunSendChatTask(msg.Author, msg.Message);
+                            await DDBridge.SendChatMessage(msg.Author, msg.Message);
                             break;
                         case ChatChannel.GlobalScripted:
-                            DDBridge.RunSendChatTask(msg.Author, msg.Message);
+                            await DDBridge.SendChatMessage(msg.Author, msg.Message);
                             break;
                         case ChatChannel.Faction:
                             if (msg.AuthorSteamId.ToString().StartsWith("7")) {
                                 IMyFaction fac = MySession.Static.Factions.TryGetFactionById(msg.Target);
-                                DDBridge.RunSendFacTask(msg.Author, msg.Message, fac.Name);
+                                DDBridge.SendFacChatMessage(msg.Author, msg.Message, fac.Name);
                             }
                             break;
                     }
                 }
                 else if (Config.ServerToDiscord && msg.Channel.Equals(ChatChannel.Global) && !msg.Message.StartsWith(Config.CommandPrefix) && msg.Target.Equals(0))
                 {
-                    if(DEBUG) {
+                    if(DEBUG)
                         Log.Info($"Recieved messages with no SID {msg.Author} | {msg.Message} | {msg.Target}");
-                    }
-                    DDBridge.RunSendChatTask(msg.Author, msg.Message);
+
+                    await DDBridge.SendChatMessage(msg.Author, msg.Message);
                 }
             }
             catch (Exception e)
@@ -138,7 +141,6 @@ namespace SEDiscordBridge
             switch (state)
             {
                 case TorchSessionState.Loaded:
-
                     //load
                     LoadSEDB();
                     if (DDBridge != null) DDBridge.SendStatusMessage(null, Config.Started);
@@ -180,7 +182,6 @@ namespace SEDiscordBridge
             Dispose();
         }
 
-
         public void ReflectEssentials() {
             var pluginId = new Guid("cbfdd6ab-4cda-4544-a201-f73efa3d46c0");
             var pluginManager = Torch.Managers.GetManager<PluginManager>();
@@ -200,9 +201,8 @@ namespace SEDiscordBridge
                 }
 
             }
-            else {
+            else
                 Log.Info("Essentials Plugin not found! ");
-            }
         }
 
         public async void InjectDiscordIDTask(IPlayer player) {
@@ -226,10 +226,8 @@ namespace SEDiscordBridge
                         messageQueue.Add(player.SteamId);
                     }
                 }
-                else {
+                else
                     Log.Warn("Commincation to target method failed!");
-                }
-
             }
             catch (Exception e) {
                 Log.Warn(e, "failure");
@@ -248,26 +246,24 @@ namespace SEDiscordBridge
                     roleData.Add(role.Id, role.Name);
                 }
             }
-
             return roleData;
         }
 
         public async Task<string> GetID(ulong steamid) {
             try {
                 Dictionary<string, string> kvp = Utils.ParseQueryString(await Utils.DataRequest(steamid.ToString(), Id.ToString(), "get_discord_id"));
-                if (kvp["error_code"] == "0") {
+                if (kvp["error_code"] == "0")
                     return kvp["data"];
-                }
-                if (kvp["error_code"] == "1") {
-                    
+
+                if (kvp["error_code"] == "1")          
                     Log.Warn(kvp["error_message"]);
-                }
-                if (kvp["error_code"] == "2") {
+
+                if (kvp["error_code"] == "2")
                     Log.Warn("Unauthorised attempt to access data - Contact Bishbash777");
-                }
-                if (kvp["error_code"] == "3") {
+
+                if (kvp["error_code"] == "3")
                     Log.Warn(kvp["error_message"]);
-                }
+
                 return null;
             }
             catch (System.Exception e) {
@@ -293,14 +289,11 @@ namespace SEDiscordBridge
             if (_sessionManager == null)
             {
                 _sessionManager = Torch.Managers.GetManager<TorchSessionManager>();
+
                 if (_sessionManager == null)
-                {
                     Log.Warn("No session manager loaded!");
-                }
                 else
-                {
                     _sessionManager.SessionStateChanged += SessionChanged;
-                }
             }
 
             if (Torch.CurrentSession != null)
@@ -308,10 +301,9 @@ namespace SEDiscordBridge
                 if (_multibase == null)
                 {
                     _multibase = Torch.CurrentSession.Managers.GetManager<IMultiplayerManagerBase>();
+
                     if (_multibase == null)
-                    {
                         Log.Warn("No join/leave manager loaded!");
-                    }
                     else
                     {
                         _multibase.PlayerJoined += Multibase_PlayerJoined;
@@ -324,20 +316,14 @@ namespace SEDiscordBridge
                 {
                     _chatmanager = Torch.CurrentSession.Managers.GetManager<ChatManagerServer>();
                     if (_chatmanager == null)
-                    {
                         Log.Warn("No chat manager loaded!");
-                    }
                     else
-                    {
                         _chatmanager.MessageRecieved += MessageRecieved;
-                    }
                 }
                 InitPost();
             }
             else if (Config.PreLoad)
-            {
                 InitPost();
-            }
 
             Log.Info("Discord Bridge loaded!");
         }
@@ -380,14 +366,14 @@ namespace SEDiscordBridge
 
             if (!DDBridge.Ready)
             {
-                if (TickRetry >= 3 && DiscordBridge.Discord.CurrentUser == null)
+                if (TickRetry >= 5 && DiscordBridge.Discord.CurrentUser == null)
                 {
-                    DiscordBridge.Discord.ConnectAsync();
+                    DiscordBridge.Discord.ReconnectAsync();
                     TickRetry = 0;
                 }
                 else
                 {
-                    if (TickRetry > 10)
+                    if (TickRetry > 15)
                     {
                         DiscordBridge.Discord.DisconnectAsync();
                         DiscordBridge.Discord.Dispose();
@@ -410,9 +396,7 @@ namespace SEDiscordBridge
             }
 
             if (Torch.CurrentSession == null || torchServer.SimulationRatio <= 0f)
-            {
                 DDBridge.SendStatus(Config.StatusPre, UserStatus.DoNotDisturb);
-            }
             else
             {
                 if (timerStart.Ticks == 0) timerStart = e.SignalTime;
@@ -452,6 +436,7 @@ namespace SEDiscordBridge
                             DiscordBridge.CooldownNeutral = 0;
                             Log.Warn("Simulation warning sent!");
                         }
+
                         if (DiscordBridge.FirstWarning == 1 && DiscordBridge.CooldownNeutral.ToString("00") == "60" && playersCount > 0)
                         {
                             Task.Run(() => DDBridge.SendSimMessage(Config.SimMessage));
@@ -460,6 +445,7 @@ namespace SEDiscordBridge
                             i = 0;
 
                         }
+
                         DiscordBridge.CooldownNeutral += (60 / DiscordBridge.Factor);
                         i++;
                     }
@@ -480,10 +466,9 @@ namespace SEDiscordBridge
 
             //Remove to conecting list
             _conecting.Remove(obj.SteamId);
+
             if (Config.Leave.Length > 0 && (!(obj.Name.StartsWith("[") && obj.Name.EndsWith("]") && obj.Name.Contains("..."))))
-            {
                 await Task.Run(() => DDBridge.SendStatusMessage(obj.Name, Config.Leave, obj));
-            }
         }
 
         private async void Multibase_PlayerJoined(IPlayer obj)
@@ -496,9 +481,7 @@ namespace SEDiscordBridge
             //Add to conecting list
             _conecting.Add(obj.SteamId);
             if (Config.Connect.Length > 0)
-            {
                 await Task.Run(() => DDBridge.SendStatusMessage(obj.Name, Config.Connect, obj));
-            }
         }
 
         private void MyEntities_OnEntityAdd(VRage.Game.Entity.MyEntity obj)
@@ -543,10 +526,12 @@ namespace SEDiscordBridge
 
             if (_sessionManager != null)
                 _sessionManager.SessionStateChanged -= SessionChanged;
+
             _sessionManager = null;
 
             if (_chatmanager != null)
                 _chatmanager.MessageRecieved -= MessageRecieved;
+
             _chatmanager = null;
 
             StopTimer();
