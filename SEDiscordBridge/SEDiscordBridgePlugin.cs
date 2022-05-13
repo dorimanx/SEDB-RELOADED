@@ -42,7 +42,7 @@ namespace SEDiscordBridge
         private UserControl _control;
         private TorchSessionManager _sessionManager;
         private ChatManagerServer _chatmanager;
-        public IChatManagerServer ChatManager => _chatmanager ?? (Torch.CurrentSession.Managers.GetManager<IChatManagerServer>());
+        public IChatManagerServer ChatManager => _chatmanager ?? (Torch.CurrentSession?.Managers?.GetManager<IChatManagerServer>());
         private IMultiplayerManagerBase _multibase;
         private readonly List<ulong> messageQueue = new List<ulong>();
         private Timer _timer;
@@ -99,7 +99,15 @@ namespace SEDiscordBridge
             {
                 if (!Config.Enabled) return;
 
-                if (msg.AuthorSteamId != null && !ChatManager.MutedUsers.Contains((ulong)msg.AuthorSteamId))
+                var foundMutedPlayer = false;
+
+                if (ChatManager != null)
+                {
+                    if (msg.AuthorSteamId != null && ChatManager.MutedUsers.Contains((ulong)msg.AuthorSteamId))
+                        foundMutedPlayer = true;
+                }
+
+                if (msg.AuthorSteamId != null && !foundMutedPlayer)
                 {
                     if (DEBUG)
                         Log.Info($"Recieved messages with valid SID {msg.Author} | {msg.Message} | {msg.Target} | {msg.AuthorSteamId}");
@@ -490,7 +498,7 @@ namespace SEDiscordBridge
 
             if (obj is MyCharacter character)
             {
-                var manager = Torch.CurrentSession.Managers.GetManager<IChatManagerServer>();
+                var manager = Torch.CurrentSession?.Managers?.GetManager<IChatManagerServer>();
                 Task.Run(() =>
                 {
                     System.Threading.Thread.Sleep(1000);
@@ -503,7 +511,9 @@ namespace SEDiscordBridge
                             //After spawn on world, remove from connecting list
                             if (messageQueue.Contains(character.ControlSteamId))
                             {
-                                manager.SendMessageAsOther(null, "Did you know you can link your steamID to your Discord account? Enter '!sedb link' to get started!", VRageMath.Color.Yellow, character.ControlSteamId);
+                                if (manager != null)
+                                    manager.SendMessageAsOther(null, "Did you know you can link your steamID to your Discord account? Enter '!sedb link' to get started!", VRageMath.Color.Yellow, character.ControlSteamId);
+ 
                                 messageQueue.Remove(character.ControlSteamId);
                             }
                         }

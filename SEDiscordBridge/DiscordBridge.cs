@@ -85,6 +85,8 @@ namespace SEDiscordBridge
             Discord.ConnectAsync();
 
             Discord.MessageCreated += Discord_MessageCreated;
+            Discord.SocketClosed += Discord_SocketError;
+            Discord.Zombied += Discord_Zombied;
 
             Discord.Ready += async (c, e) =>
             {
@@ -102,6 +104,32 @@ namespace SEDiscordBridge
                 game.Name = status;
                 Discord.UpdateStatusAsync(game, userStatus);
             }
+        }
+
+        private Task Discord_SocketError(DiscordClient discord, DSharpPlus.EventArgs.SocketCloseEventArgs e)
+        {
+            DisconnectDiscord();
+            Discord.ConnectAsync();
+            Discord.Ready += async (c, e) =>
+            {
+                Ready = true;
+                await Task.CompletedTask;
+            };
+
+            return Task.CompletedTask;
+        }
+
+        private Task Discord_Zombied(DiscordClient discord, DSharpPlus.EventArgs.ZombiedEventArgs e)
+        {
+            DisconnectDiscord();
+            Discord.ConnectAsync();
+            Discord.Ready += async (c, e) =>
+            {
+                Ready = true;
+                await Task.CompletedTask;
+            };
+
+            return Task.CompletedTask;
         }
 
         /*
@@ -357,11 +385,14 @@ namespace SEDiscordBridge
                             sender = e.Guild.GetMemberAsync(e.Author.Id).Result.Username;
                     }
 
-                    var manager = Plugin.Torch.CurrentSession.Managers.GetManager<IChatManagerServer>();
-                    var dSender = Plugin.Config.Format2.Replace("{p}", sender);
-                    var msg = MentionIDToName(e.Message);
-                    lastMessage = dSender + msg;
-                    manager.SendMessageAsOther(dSender, msg, Plugin.Config.GlobalColor);
+                    var manager = Plugin.Torch?.CurrentSession?.Managers?.GetManager<IChatManagerServer>();
+                    if (manager != null)
+                    {
+                        var dSender = Plugin.Config.Format2.Replace("{p}", sender);
+                        var msg = MentionIDToName(e.Message);
+                        lastMessage = dSender + msg;
+                        manager.SendMessageAsOther(dSender, msg, Plugin.Config.GlobalColor);
+                    }
                 }
 
                 //send to faction
@@ -388,11 +419,15 @@ namespace SEDiscordBridge
                                     else
                                         sender = e.Author.Username;
                                 }
-                                var manager = Plugin.Torch.CurrentSession.Managers.GetManager<IChatManagerServer>();
-                                var dSender = Plugin.Config.FacFormat2.Replace("{p}", sender);
-                                var msg = MentionIDToName(e.Message);
-                                lastMessage = dSender + msg;
-                                manager.SendMessageAsOther(dSender, msg, Plugin.Config.FacColor, steamid);
+
+                                var manager = Plugin.Torch?.CurrentSession?.Managers?.GetManager<IChatManagerServer>();
+                                if (manager != null)
+                                {
+                                    var dSender = Plugin.Config.FacFormat2.Replace("{p}", sender);
+                                    var msg = MentionIDToName(e.Message);
+                                    lastMessage = dSender + msg;
+                                    manager.SendMessageAsOther(dSender, msg, Plugin.Config.FacColor, steamid);
+                                }
                             }
                         }
                     }
