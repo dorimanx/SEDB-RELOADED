@@ -83,8 +83,8 @@
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="DSharpPlus, Version=4.3.0.1133, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\DSharpPlus.4.3.0-nightly-01133\lib\netstandard2.0\DSharpPlus.dll</HintPath>
+    <Reference Include="DSharpPlus, Version=4.3.0.1134, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\DSharpPlus.4.3.0-nightly-01134\lib\netstandard2.0\DSharpPlus.dll</HintPath>
     </Reference>
     <Reference Include="Emzi0767.Common, Version=2.6.2.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\Emzi0767.Common.2.6.2\lib\net45\Emzi0767.Common.dll</HintPath>

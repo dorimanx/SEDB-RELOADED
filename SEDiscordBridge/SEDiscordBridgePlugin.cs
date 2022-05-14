@@ -372,35 +372,37 @@ namespace SEDiscordBridge
         {
             if (!Config.Enabled || DDBridge == null) return;
 
+            if (DDBridge.Ready)
+                TickRetry = 0;
+
             if (!DDBridge.Ready)
             {
-                if (TickRetry >= 5 && DiscordBridge.Discord.CurrentUser == null)
+                if (TickRetry == 5)
                 {
-                    DiscordBridge.Discord.ReconnectAsync();
-                    TickRetry = 0;
+                    DiscordBridge.Discord.DisconnectAsync();
+                    DiscordBridge.Discord.ConnectAsync();
                 }
                 else
                 {
-                    if (TickRetry > 15)
+                    if (TickRetry > 24)
                     {
-                        DiscordBridge.Discord.DisconnectAsync();
-                        DiscordBridge.Discord.Dispose();
-                        DDBridge = new DiscordBridge(this);
+                        DDBridge.Ready = false;
                         TickRetry = 0;
+                        DiscordBridge.Discord.DisconnectAsync();
+                        DDBridge = new DiscordBridge(this);
+                        return;
                     }
                 }
 
                 TickRetry++;
             }
-            else if (DiscordBridge.Discord.CurrentUser == null || DiscordBridge.Discord.CurrentUser.Id == 0L
-                                                               || DiscordBridge.Discord.Presences == null
-                                                               || DiscordBridge.Discord.Presences.Count == 0)
+            else if (DiscordBridge.Discord.Ping == 0)
             {
                 DDBridge.Ready = false;
-                DiscordBridge.Discord.DisconnectAsync();
-                DiscordBridge.Discord.Dispose();
-                DDBridge = new DiscordBridge(this);
                 TickRetry = 0;
+                DiscordBridge.Discord.DisconnectAsync();
+                DDBridge = new DiscordBridge(this);
+                return;
             }
 
             if (Torch.CurrentSession == null || torchServer.SimulationRatio <= 0f)

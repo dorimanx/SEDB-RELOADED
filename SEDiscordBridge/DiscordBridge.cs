@@ -76,13 +76,21 @@ namespace SEDiscordBridge
                     Token = Plugin.Config.BotToken,
                     TokenType = TokenType.Bot,
                     AutoReconnect = true,
+                    ReconnectIndefinitely = true,
+                    HttpTimeout = TimeSpan.FromSeconds(5),
+                    MessageCacheSize = 4096,
+                    LargeThreshold = 250,
                 };
 
                 Discord = new DiscordClient(DiscordConfiguration);
             }
             catch (Exception) { }
 
-            Discord.ConnectAsync();
+            if (!Plugin.Config.UseStatus)
+            {
+                Discord.DisconnectAsync();
+                Discord.ConnectAsync();
+            }
 
             Discord.MessageCreated += Discord_MessageCreated;
             Discord.SocketClosed += Discord_SocketError;
@@ -108,26 +116,17 @@ namespace SEDiscordBridge
 
         private Task Discord_SocketError(DiscordClient discord, DSharpPlus.EventArgs.SocketCloseEventArgs e)
         {
-            DisconnectDiscord();
-            Discord.ConnectAsync();
-            Discord.Ready += async (c, e) =>
-            {
-                Ready = true;
-                await Task.CompletedTask;
-            };
+            Ready = false;
+            Discord.ReconnectAsync();
+
+            SEDiscordBridgePlugin.Log.Warn($"SocketClose Event: {e}");
 
             return Task.CompletedTask;
         }
 
         private Task Discord_Zombied(DiscordClient discord, DSharpPlus.EventArgs.ZombiedEventArgs e)
         {
-            DisconnectDiscord();
-            Discord.ConnectAsync();
-            Discord.Ready += async (c, e) =>
-            {
-                Ready = true;
-                await Task.CompletedTask;
-            };
+            Discord.ReconnectAsync();
 
             return Task.CompletedTask;
         }
