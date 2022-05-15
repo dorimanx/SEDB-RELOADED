@@ -1,5 +1,4 @@
 ﻿using NLog;
-using DSharpPlus;
 using DSharpPlus.Entities;
 using Sandbox.Game.Entities;
 using Sandbox.Game.Entities.Character;
@@ -101,14 +100,12 @@ namespace SEDiscordBridge
 
                 var foundMutedPlayer = false;
 
-                if (ChatManager != null)
-                {
+                if (ChatManager != null) {
                     if (msg.AuthorSteamId != null && ChatManager.MutedUsers.Contains((ulong)msg.AuthorSteamId))
                         foundMutedPlayer = true;
                 }
 
-                if (msg.AuthorSteamId != null && !foundMutedPlayer)
-                {
+                if (msg.AuthorSteamId != null && !foundMutedPlayer) {
                     if (DEBUG)
                         Log.Info($"Recieved messages with valid SID {msg.Author} | {msg.Message} | {msg.Target} | {msg.AuthorSteamId}");
 
@@ -128,8 +125,7 @@ namespace SEDiscordBridge
                             break;
                     }
                 }
-                else if (Config.ServerToDiscord && msg.Channel.Equals(ChatChannel.Global) && !msg.Message.StartsWith(Config.CommandPrefix) && msg.Target.Equals(0))
-                {
+                else if (Config.ServerToDiscord && msg.Channel.Equals(ChatChannel.Global) && !msg.Message.StartsWith(Config.CommandPrefix) && msg.Target.Equals(0)) {
                     if(DEBUG)
                         Log.Info($"Recieved messages with no SID {msg.Author} | {msg.Message} | {msg.Target}");
 

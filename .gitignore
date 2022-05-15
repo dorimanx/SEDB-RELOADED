@@ -24,3 +24,7 @@ SEDiscordBridge/bin/x64/Release/
 SEDiscordBridge/obj/x64/Debug/
 
 SEDiscordBridge/obj/x64/Release/
+
+*.dat
+
+SEDiscordBridge/obj/Release/

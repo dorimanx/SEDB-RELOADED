@@ -129,7 +129,6 @@ namespace SEDiscordBridge
             return Task.CompletedTask;
         }
 
-        /*
         public static async void SendDiscordMessageStatic(string message) {
 
             string channelToPostIn = Plugin.Config.ChatChannelId;
@@ -148,7 +147,6 @@ namespace SEDiscordBridge
         public static async void SendDiscordMessageStatic(string message, string channelID) {
             await Discord.SendMessageAsync(Discord.GetChannelAsync(ulong.Parse(channelID)).Result, message);
         }
-        */
 
         public void SendSimMessage(string msg)
         {
@@ -176,8 +174,7 @@ namespace SEDiscordBridge
             if (Ready && Plugin.Config.ChatChannelId.Length > 0)
             {
                 var OriginalMsg = msg;
-                foreach (var chanID in Plugin.Config.ChatChannelId.Split(' '))
-                {
+                foreach (var chanID in Plugin.Config.ChatChannelId.Split(' ')) {
                     DiscordChannel chann = Discord.GetChannelAsync(ulong.Parse(chanID)).Result;
                     //mention
                     msg = MentionNameToID(OriginalMsg, chann);
@@ -185,20 +182,16 @@ namespace SEDiscordBridge
                     if (user != null)
                         msg = Plugin.Config.Format.Replace("{msg}", msg).Replace("{p}", user).Replace("{ts}", TimeZone.CurrentTimeZone.ToLocalTime(DateTime.Now).ToString());
 
-                    try
-					{
+                    try {
                         botId = Discord.SendMessageAsync(chann, msg.Replace("/n", "\n")).Result.Author.Id;
                     }
-                    catch (DSharpPlus.Exceptions.RateLimitException)
-					{
-                        if (retry <= 5)
-						{
+                    catch (DSharpPlus.Exceptions.RateLimitException) {
+                        if (retry <= 5) {
                             retry++;
                             await SendChatMessage(user, msg);
                             retry = 0;
                         }
-                        else
-						{
+                        else {
                             SEDiscordBridgePlugin.Log.Fatal($"Aborting send chat message (Too many attempts)");
                             SEDiscordBridgePlugin.Log.Warn($"Message: {msg}");
                         }
@@ -298,10 +291,8 @@ namespace SEDiscordBridge
                 string comChannelId = Plugin.Config.CommandChannelId;
                 if (!string.IsNullOrEmpty(comChannelId))
                 {
-                    foreach (string prefix in cmdPrefixes)
-                    {
-                        if (Plugin.Config.CommandChannelId.Contains(e.Channel.Id.ToString()) && e.Message.Content.StartsWith(prefix))
-                        {
+                    foreach (string prefix in cmdPrefixes) {
+                        if (Plugin.Config.CommandChannelId.Contains(e.Channel.Id.ToString()) && e.Message.Content.StartsWith(prefix)) {
                             cmdConditionMatch = true;
                             matchedPrefix = prefix;
                         }
@@ -383,8 +374,7 @@ namespace SEDiscordBridge
                     }
 
                     var manager = Plugin.Torch?.CurrentSession?.Managers?.GetManager<IChatManagerServer>();
-                    if (manager != null)
-                    {
+                    if (manager != null) {
                         var dSender = Plugin.Config.Format2.Replace("{p}", sender);
                         var msg = MentionIDToName(e.Message);
                         lastMessage = dSender + msg;
@@ -435,10 +425,8 @@ namespace SEDiscordBridge
 
         private void SendCmdResponse(string response, DiscordChannel chann, DiscordColor color, string command)
         {
-            if (Plugin.Config.Embed)
-            {
-                DiscordEmbed discordEmbed = new DiscordEmbedBuilder()
-                {
+            if (Plugin.Config.Embed) {
+                DiscordEmbed discordEmbed = new DiscordEmbedBuilder() {
                     Description = response,
                     Color = color,
                     Title = string.IsNullOrEmpty(command) ? null : $"Command: {command}"
@@ -449,8 +437,7 @@ namespace SEDiscordBridge
                 if (Plugin.Config.RemoveResponse > 0)
                     Task.Delay(Plugin.Config.RemoveResponse * 1000).ContinueWith(t => dms?.DeleteAsync());
             }
-            else
-            {
+            else {
                 DiscordMessage dms = Discord.SendMessageAsync(chann, response).Result;
                 botId = dms.Author.Id;
                 if (Plugin.Config.RemoveResponse > 0)
@@ -489,8 +476,7 @@ namespace SEDiscordBridge
                                 continue;
                             }
 
-                            if (string.Compare(name, "here", true) == 0 && !Plugin.Config.MentEveryone)
-                            {
+                            if (string.Compare(name, "here", true) == 0 && !Plugin.Config.MentEveryone) {
                                 msg = msg.Replace(part, part.Substring(1));
                                 continue;
                             }
