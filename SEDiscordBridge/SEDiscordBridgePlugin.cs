@@ -389,6 +389,7 @@ namespace SEDiscordBridge
                         DDBridge.Ready = false;
                         TickRetry = 0;
                         DiscordBridge.Discord.DisconnectAsync();
+                        DiscordBridge.Discord.Dispose();
                         DDBridge = new DiscordBridge(this);
                         return;
                     }
@@ -401,6 +402,7 @@ namespace SEDiscordBridge
                 DDBridge.Ready = false;
                 TickRetry = 0;
                 DiscordBridge.Discord.DisconnectAsync();
+                DiscordBridge.Discord.Dispose();
                 DDBridge = new DiscordBridge(this);
                 return;
             }

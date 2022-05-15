@@ -76,9 +76,8 @@ namespace SEDiscordBridge
                     Token = Plugin.Config.BotToken,
                     TokenType = TokenType.Bot,
                     AutoReconnect = true,
-                    ReconnectIndefinitely = true,
-                    HttpTimeout = TimeSpan.FromSeconds(5),
-                    MessageCacheSize = 4096,
+                    HttpTimeout = TimeSpan.FromSeconds(10),
+                    MessageCacheSize = 2048,
                     LargeThreshold = 250,
                 };
 
@@ -117,7 +116,6 @@ namespace SEDiscordBridge
         private Task Discord_SocketError(DiscordClient discord, DSharpPlus.EventArgs.SocketCloseEventArgs e)
         {
             Ready = false;
-            Discord.ReconnectAsync();
 
             SEDiscordBridgePlugin.Log.Warn($"SocketClose Event: {e}");
 
