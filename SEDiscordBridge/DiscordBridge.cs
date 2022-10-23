@@ -358,7 +358,13 @@ namespace SEDiscordBridge
                     if (!Plugin.Config.AsServer)
                     {
                         if (Plugin.Config.UseNicks)
+                        {
                             sender = e.Guild.GetMemberAsync(e.Author.Id).Result.Nickname;
+                            if (string.IsNullOrWhiteSpace(sender))
+                            {
+                                sender = e.Guild.GetMemberAsync(e.Author.Id).Result.Username;
+                            }
+                        }
                         else
                             sender = e.Guild.GetMemberAsync(e.Author.Id).Result.Username;
                     }
@@ -392,7 +398,13 @@ namespace SEDiscordBridge
                                 if (!Plugin.Config.AsServer)
                                 {
                                     if (Plugin.Config.UseNicks)
+                                    {
                                         sender = e.Guild.GetMemberAsync(e.Author.Id).Result.Nickname;
+                                        if (string.IsNullOrWhiteSpace(sender))
+                                        {
+                                            sender = e.Author.Username;
+                                        }
+                                    }
                                     else
                                         sender = e.Author.Username;
                                 }
