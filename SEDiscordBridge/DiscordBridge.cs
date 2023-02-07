@@ -363,7 +363,7 @@ namespace SEDiscordBridge
                             sender = user.Nickname;
                             if (string.IsNullOrWhiteSpace(sender))
                             {
-                                sender = user.Username;
+                                sender = user.DisplayName;
                             }
                         }
                         else
