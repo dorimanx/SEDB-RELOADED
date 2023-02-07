@@ -492,14 +492,14 @@ namespace SEDiscordBridge
                 await Task.Run(() => DDBridge.SendStatusMessage(obj.Name, Config.Connect, obj));
         }
 
-        private void MyEntities_OnEntityAdd(VRage.Game.Entity.MyEntity obj)
+        private async void MyEntities_OnEntityAdd(VRage.Game.Entity.MyEntity obj)
         {
             if (!Config.Enabled) return;
 
             if (obj is MyCharacter character)
             {
                 var manager = Torch.CurrentSession?.Managers?.GetManager<IChatManagerServer>();
-                Task.Run(() =>
+                await Task.Run(() =>
                 {
                     System.Threading.Thread.Sleep(1000);
                     if (_conecting.Contains(character.ControlSteamId) && character.IsPlayer && Config.Join.Length > 0)
