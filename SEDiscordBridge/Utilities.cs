@@ -1,4 +1,4 @@
-﻿using NLog;
+using NLog;
 using System.Collections.Generic;
 using System.Linq;
 using Torch.API;
@@ -26,39 +26,28 @@ namespace SEDiscordBridge {
             return nvc.AllKeys.ToDictionary(k => k, k => nvc[k]);
         }
 
-        public static MyPlayer GetPlayerByNameOrId(string nameOrPlayerId) {
-            if (!long.TryParse(nameOrPlayerId, out long id)) {
-                foreach (var identity in MySession.Static.Players.GetAllIdentities()) {
-                    if (identity.DisplayName == nameOrPlayerId) {
+        public static MyPlayer GetPlayerByNameOrId(string nameOrPlayerId)
+        {
+            if (!long.TryParse(nameOrPlayerId, out long id))
+            {
+                foreach (var identity in MySession.Static.Players.GetAllIdentities())
+                {
+                    if (identity.DisplayName == nameOrPlayerId)
+                    {
                         id = identity.IdentityId;
                     }
                 }
             }
 
-            if (MySession.Static.Players.TryGetPlayerId(id, out MyPlayer.PlayerId playerId)) {
-                if (MySession.Static.Players.TryGetPlayerById(playerId, out MyPlayer player)) {
+            if (MySession.Static.Players.TryGetPlayerId(id, out MyPlayer.PlayerId playerId))
+            {
+                if (MySession.Static.Players.TryGetPlayerById(playerId, out MyPlayer player))
+                {
                     return player;
                 }
             }
 
             return null;
-        }
-
-
-        public static async Task<string> DataRequest(string uSteamid, string guid, string funciton) {
-            HttpResponseMessage response;
-            using (HttpClient clients = new HttpClient()) {
-                List<KeyValuePair<string, string>> pairs = new List<KeyValuePair<string, string>>
-                {
-                        new KeyValuePair<string, string>("DATA", uSteamid),
-                        new KeyValuePair<string, string>("FUNCTION",funciton),
-                        new KeyValuePair<string, string>("API_KEY","TEST_KEY"),
-                        new KeyValuePair<string, string>("GUID", guid),
-                };
-                FormUrlEncodedContent content = new FormUrlEncodedContent(pairs);
-                response = await clients.PostAsync("http://sedb.uk/api/index.php", content);
-            }
-            return await response.Content.ReadAsStringAsync();
         }
 
         public static ReadOnlyObservableCollection<ColorStruct> Colors { get; } = new ReadOnlyObservableCollection<ColorStruct>(new ObservableCollection<ColorStruct>(typeof(Color).GetProperties(BindingFlags.Public | BindingFlags.Static).Select(b => new ColorStruct((Color)b.GetValue(null), b.Name))));
