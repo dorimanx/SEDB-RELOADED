@@ -17,10 +17,16 @@
                         </Hyperlink>
                     </Label>
                     <Label Content="*After setup the token, save and restart the torch." HorizontalAlignment="Left" Margin="19,104,0,0" VerticalAlignment="Top"/>
-                    <Label Content="Bot Token" HorizontalAlignment="Left" Margin="9,130,0,0" VerticalAlignment="Top"/>
-                    <TextBox HorizontalAlignment="Left" Height="23" Margin="9,161,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="492" IsEnabled="{Binding TokenVisibleState}" Text="{Binding BotToken}" ToolTip="You need to create a discord bot to get the token"/>
-                    <Label Content="*If the token text box is not enabled, you need to enable or change directly on config file." HorizontalAlignment="Left" Margin="19,189,0,0" VerticalAlignment="Top"/>
-                    <CheckBox Content="Load Ranks" HorizontalAlignment="Left" Margin="9,50,0,0" VerticalAlignment="Top" IsChecked="{Binding LoadRanks}" ToolTip="Load Essentials Ranks, May Add LAG on Player Join!"/>
+                    <Label/>
+
+                    <Label Content="Bot Token" HorizontalAlignment="Left" Margin="8,135,0,0" VerticalAlignment="Top"/>
+                    <TextBox HorizontalAlignment="Left" Height="23" Margin="8,166,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="492" IsEnabled="{Binding TokenVisibleState}" Text="{Binding BotToken}" ToolTip="You need to create a discord bot to get the token"/>
+                    <TextBlock Height="30" Margin="8,194,10,398">
+                        <Run Text="*If the token is not visible here, you need to enable or change directly on config file."/>
+                        <LineBreak/>
+                        <Run Text="*If token is not provided here, plugin will try to read environment variable `DISCORD_TOKEN`."/>
+                    </TextBlock>
+                    <CheckBox Content="Load Ranks" HorizontalAlignment="Left" Margin="10,50,0,0" VerticalAlignment="Top" IsChecked="{Binding LoadRanks}" ToolTip="Load Essentials Ranks, May Add LAG on Player Join!"/>
                 </Grid>
             </TabItem>
             <TabItem Header="Chat">
