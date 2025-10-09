@@ -147,6 +147,13 @@ namespace SEDiscordBridge
                             break;
                     }
                 }
+                else if (Config.PVP_RadarToDiscord && msg.Channel.Equals(ChatChannel.Global) && msg.Message.StartsWith("PVP Radar") && msg.Target.Equals(0))
+                {
+                    if (DEBUG)
+                        Log.Info($"Recieved messages with PVP Radar {msg.Author} | {msg.Message} | {msg.Target}");
+
+                    await DDBridge.SendChatMessage(msg.Author, msg.Message);
+                }
                 else if (Config.ServerToDiscord && msg.Channel.Equals(ChatChannel.Global) && !msg.Message.StartsWith(Config.CommandPrefix) && msg.Target.Equals(0)) {
                     if(DEBUG)
                         Log.Info($"Recieved messages with no SID {msg.Author} | {msg.Message} | {msg.Target}");

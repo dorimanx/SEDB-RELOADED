@@ -41,9 +41,10 @@
                     <CheckBox Content="Send SteamId" HorizontalAlignment="Left" Margin="10,234,0,0" VerticalAlignment="Top" IsChecked="{Binding DisplaySteamId}"/>
                     <CheckBox Content="Send As Server" HorizontalAlignment="Left" Margin="10,254,0,0" VerticalAlignment="Top" IsChecked="{Binding AsServer}" ToolTip="Messages from discord will be as server or with discord user name? May conflict if the username is the same as the player online"/>
                     <CheckBox Content="Recive Other Bot Messages" HorizontalAlignment="Left" Margin="10,274,0,0" VerticalAlignment="Top"  IsChecked="{Binding BotToGame}" ToolTip="Receive and send bot messages to in-game?"/>
-                    <CheckBox Content="Send Server Broadcasts to Discord" HorizontalAlignment="Left" Margin="10,294,0,0" VerticalAlignment="Top" IsChecked="{Binding ServerToDiscord}" ToolTip="Send any in-game Server outputs to Discord?"/>
+                    <CheckBox Content="Send Server Broadcasts to Discord" HorizontalAlignment="Left" Margin="10,314,0,0" VerticalAlignment="Top" IsChecked="{Binding ServerToDiscord}" ToolTip="Send any in-game Server outputs to Discord?"/>
                     <ComboBox HorizontalAlignment="Left" Margin="54,187,0,0" VerticalAlignment="Top" Width="120" x:Name="GlobalChatColorBox" RenderTransformOrigin="0.475,2.727" DisplayMemberPath="DisplayName" SelectedValuePath="Color" SelectionChanged="GlobalChatColorBox_SelectionChanged"/>
                     <Label Content="Color" HorizontalAlignment="Left" Margin="10,187,0,0" VerticalAlignment="Top" RenderTransformOrigin="-6.711,-4.692"/>
+                    <CheckBox Content="Send PVP Radar Broadcasts to Discord" HorizontalAlignment="Left" Margin="10,294,0,0" VerticalAlignment="Top" IsChecked="{Binding PVP_RadarToDiscord}" ToolTip="Send PVP Radar in-game Server outputs to Discord?"/>
                 </Grid>
             </TabItem>
             <TabItem Header="Commands">

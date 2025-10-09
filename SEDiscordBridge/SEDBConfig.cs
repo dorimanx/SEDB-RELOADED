@@ -55,6 +55,9 @@ namespace SEDiscordBridge
         private bool _serverToDiscord = false;
         public bool ServerToDiscord { get => _serverToDiscord; set => SetValue(ref _serverToDiscord, value); }
 
+        private bool _pvpradarToDiscord = true;
+        public bool PVP_RadarToDiscord { get => _pvpradarToDiscord; set => SetValue(ref _pvpradarToDiscord, value); }
+
         private string _serverName = "Server";
         public string ServerName { get => _serverName; set => SetValue(ref _serverName, value); }
 
