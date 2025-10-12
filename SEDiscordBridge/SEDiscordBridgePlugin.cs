@@ -147,7 +147,7 @@ namespace SEDiscordBridge
                             break;
                     }
                 }
-                else if (Config.PVP_RadarToDiscord && msg.Channel.Equals(ChatChannel.Global) && msg.Message.StartsWith("PVP Radar") && msg.Target.Equals(0))
+                else if (Config.PVP_RadarToDiscord && msg.Channel.Equals(ChatChannel.Global) && msg.Message.StartsWith("PVP Radar"))
                 {
                     if (DEBUG)
                         Log.Info($"Recieved messages with PVP Radar {msg.Author} | {msg.Message} | {msg.Target}");
