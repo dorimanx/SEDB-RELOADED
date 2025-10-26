@@ -1,4 +1,4 @@
-using DSharpPlus;
+﻿using DSharpPlus;
 using DSharpPlus.Entities;
 using Sandbox.Game.Multiplayer;
 using Sandbox.Game.World;
@@ -12,6 +12,8 @@ using Torch.API.Session;
 using Torch.Commands;
 using VRage.Game;
 using VRage.Game.ModAPI;
+using System.Net.Http;
+using Sandbox.Engine.Multiplayer;
 
 namespace SEDiscordBridge
 {
@@ -33,6 +35,110 @@ namespace SEDiscordBridge
         public static int FirstWarning;
         public static decimal MinIncrement;
         public static decimal Locked;
+
+        // Telegram Data
+        private static readonly HttpClient client = new HttpClient();
+
+        private static string BotToken = "";
+        private static string ChatId = "";
+        private static int ThreadId = 0;
+
+        // Number of retry attempts if sending fails
+        private const int MaxRetries = 3;
+
+        public static async Task<bool> TelegramSendMessageAsync(string message)
+        {
+            if (Plugin.Config.TelegramToken == null || Plugin.Config.TelegramToken == string.Empty ||
+                Plugin.Config.TelegramCHATID == null || Plugin.Config.TelegramCHATID == string.Empty ||
+                Plugin.Config.TelegramTHREADID == 0)
+                return false;
+
+            BotToken = Plugin.Config.TelegramToken;
+            ChatId = Plugin.Config.TelegramCHATID;
+            ThreadId = Plugin.Config.TelegramTHREADID;
+
+            for (int attempt = 1; attempt <= MaxRetries; attempt++)
+            {
+                // First, check if Telegram Bot API is reachable
+                if (!await IsBotAvailableAsync())
+                {
+                    Console.WriteLine($"⚠️  Attempt {attempt}: Bot API not available. Retrying...");
+                    await Task.Delay(2000); // 2 sec wait before retry
+                    continue;
+                }
+
+                string url = $"https://api.telegram.org/bot{BotToken}/sendMessage" +
+                             $"?chat_id={ChatId}&parse_mode=Markdown&message_thread_id={ThreadId}" +
+                             $"&text={Uri.EscapeDataString(message)}";
+
+                try
+                {
+                    HttpResponseMessage response = await client.GetAsync(url);
+
+                    if (response.IsSuccessStatusCode)
+                    {
+                        //Console.WriteLine($"✅ Message sent successfully (attempt {attempt}).");
+                        return true;
+                    }
+                    else
+                    {
+                        Console.WriteLine($"⚠️  Attempt {attempt}: API returned {response.StatusCode}");
+                    }
+                }
+                catch (HttpRequestException ex)
+                {
+                    Console.WriteLine($"❌ Network error (attempt {attempt}): {ex.Message}");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"❌ Unexpected error (attempt {attempt}): {ex.Message}");
+                }
+
+                // Wait before next retry
+                await Task.Delay(2000);
+            }
+
+            Console.WriteLine("❌ All retry attempts failed. Message not sent.");
+            return false;
+        }
+
+        private static async Task<bool> IsBotAvailableAsync()
+        {
+            try
+            {
+                string testUrl = $"https://api.telegram.org/bot{BotToken}/getMe";
+                HttpResponseMessage response = await client.GetAsync(testUrl);
+                return response.IsSuccessStatusCode;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        public static string ReplaceEmojiAliases(string text)
+        {
+            if (string.IsNullOrEmpty(text))
+                return text;
+
+            // Define emoji alias map (add more if needed)
+            var emojiMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+            {
+                { ":speech_balloon:", "💬" },
+                { ":rocket:", "💬" },
+                { ":fire:", "🔥" },
+                { ":thumbsup:", "👍" },
+                { ":warning:", "⚠️" }
+                // add any others you expect from your source
+            };
+
+            // Replace each alias found in the text
+            foreach (var kvp in emojiMap)
+                text = Regex.Replace(text, Regex.Escape(kvp.Key), kvp.Value, RegexOptions.IgnoreCase);
+
+            return text;
+        }
+
         public DiscordBridge(SEDiscordBridgePlugin plugin)
         {
             Plugin = plugin;
@@ -174,6 +280,15 @@ namespace SEDiscordBridge
 
                     try {
                         botId = Discord.SendMessageAsync(chann, msg.Replace("/n", "\n")).Result.Author.Id;
+
+                        // Telegram Bot
+                        string WorldName = MyMultiplayer.Static.WorldName;
+                        string rawMsg = msg.Replace("/n", "\n");
+                        string cleanedMsg = ReplaceEmojiAliases(rawMsg);
+                        bool sent = await TelegramSendMessageAsync($"{WorldName} " + $"{cleanedMsg}");
+
+                        if (!sent && Plugin.Config.TelegramToken != null && Plugin.Config.TelegramToken != string.Empty)
+                            Console.WriteLine("⚠️  Telegram bot unreachable, skipping notification.");
                     }
                     catch (DSharpPlus.Exceptions.RateLimitException) {
                         if (retry <= 5) {

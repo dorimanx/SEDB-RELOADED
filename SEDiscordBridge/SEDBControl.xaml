@@ -27,6 +27,12 @@
                         <Run Text="*If token is not provided here, plugin will try to read environment variable `DISCORD_TOKEN`."/>
                     </TextBlock>
                     <CheckBox Content="Load Ranks" HorizontalAlignment="Left" Margin="10,50,0,0" VerticalAlignment="Top" IsChecked="{Binding LoadRanks}" ToolTip="Load Essentials Ranks, May Add LAG on Player Join!"/>
+                    <Label Content="Telegram Bot Token" HorizontalAlignment="Left" Margin="7,240,0,0" VerticalAlignment="Top"/>
+                    <TextBox HorizontalAlignment="Left" Height="23" Margin="10,266,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="492" Text="{Binding TelegramToken}" ToolTip="You need to create a Telegram bot to get the token"/>
+                    <Label Content="Telegram CHAT-ID" HorizontalAlignment="Left" Margin="10,289,0,0" VerticalAlignment="Top"/>
+                    <TextBox HorizontalAlignment="Left" Height="23" Margin="7,315,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="194" Text="{Binding TelegramCHATID}" ToolTip="You need to set Telegram bot Chat ID"/>
+                    <Label Content="Telegram THREAD-ID" HorizontalAlignment="Left" Margin="249,289,0,0" VerticalAlignment="Top"/>
+                    <TextBox HorizontalAlignment="Left" Height="23" Margin="249,315,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="122" Text="{Binding TelegramTHREADID}" ToolTip="You need to set Telegram bot Thread ID"/>
                 </Grid>
             </TabItem>
             <TabItem Header="Chat">

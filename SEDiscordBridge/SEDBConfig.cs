@@ -28,6 +28,19 @@ namespace SEDiscordBridge
 
         public string BotTokenConfig => !string.IsNullOrEmpty(_token) ? _token : Environment.GetEnvironmentVariable("DISCORD_TOKEN") ?? "";
 
+        private string _TelegramToken = "";
+
+        public string TelegramToken { get => _TelegramToken; set => SetValue(ref _TelegramToken, value); }
+
+        private string _TelegramCHATID = "";
+
+        public string TelegramCHATID { get => _TelegramCHATID; set => SetValue(ref _TelegramCHATID, value); }
+
+        private int _TelegramTHREADID = 0;
+
+        public int TelegramTHREADID { get => _TelegramTHREADID; set => SetValue(ref _TelegramTHREADID, value); }
+
+
         private string _chatChannelID = "";
         public string ChatChannelId { get => _chatChannelID; set => SetValue(ref _chatChannelID, value); }
 
